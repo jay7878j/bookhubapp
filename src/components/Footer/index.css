@@ -1,0 +1,17 @@
+.footer-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 100px;
+  margin-bottom: 50px;
+}
+
+.social-icons-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.social-icon {
+  margin-right: 15px;
+}

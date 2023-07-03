@@ -64,7 +64,7 @@ class Home extends Component {
     const {topRatedBooks} = this.state
     const settings = {
       infinite: true,
-      slidesToShow: 6,
+      slidesToShow: 4,
       slidesToScroll: 1,
       cssEase: 'linear',
       speed: 1000,

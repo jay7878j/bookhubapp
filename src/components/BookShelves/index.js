@@ -2,8 +2,7 @@ import {Component} from 'react'
 import {Link} from 'react-router-dom'
 import Cookies from 'js-cookie'
 import Loader from 'react-loader-spinner'
-import {BiSearchAlt2} from 'react-icons/bi'
-import {AiFillStar} from 'react-icons/ai'
+import {BsSearch, BsFillStarFill} from 'react-icons/bs'
 import Header from '../Header'
 import Footer from '../Footer'
 
@@ -52,6 +51,7 @@ class BookShelves extends Component {
     this.getBooksData()
   }
 
+  //   Fetching Books Data
   getBooksData = async () => {
     this.setState({apiStatus: apiStatusConstraints.inProgress})
     const jwtToken = Cookies.get('jwt_token')
@@ -80,7 +80,6 @@ class BookShelves extends Component {
       }))
 
       // console.log(formatData);
-
       this.setState({
         booksData: formatData,
         apiStatus: apiStatusConstraints.success,
@@ -100,7 +99,7 @@ class BookShelves extends Component {
           const {id, title, authorName, coverPic, rating, readStatus} = eachBook
 
           return (
-            <Link to={`books/${id}`} className="book-link-item">
+            <Link to={`books/${id}`} className="book-link-item" key={id}>
               <li className="book-list-item">
                 <img className="book-img" src={coverPic} alt={title} />
                 <div className="book-info-container">
@@ -108,7 +107,7 @@ class BookShelves extends Component {
                   <p className="book-author">{authorName}</p>
                   <p className="rating">
                     Avg Rating
-                    <AiFillStar className="rating-icon" color="red" />
+                    <BsFillStarFill className="rating-icon" color="red" />
                     {rating}
                   </p>
                   <p className="read-status">
@@ -128,6 +127,7 @@ class BookShelves extends Component {
     const onReadStatusUpdate = (status, label) => {
       this.setState({readStatus: status, readLabel: label}, this.getBooksData)
     }
+    const {readStatus} = this.state
 
     return (
       <div className="read-status-section">
@@ -136,15 +136,20 @@ class BookShelves extends Component {
           {bookshelvesList.map(eachShelf => {
             const {id, value, label} = eachShelf
 
+            const activeShelf = readStatus === value
+
+            const shelfClassName = activeShelf ? 'active-shelf-list-item' : ''
+            const shelfBtnClassName = activeShelf ? 'active-shelf-btn' : ''
+
             const onShelfBtnClick = () => {
               onReadStatusUpdate(value, label)
             }
 
             return (
-              <li className="shelf-list-item" key={id}>
+              <li className={`shelf-list-item ${shelfClassName}`} key={id}>
                 <button
                   type="button"
-                  className="shelf-btn"
+                  className={`shelf-btn ${shelfBtnClassName}`}
                   onClick={onShelfBtnClick}
                 >
                   {label}
@@ -187,14 +192,104 @@ class BookShelves extends Component {
             value={searchInput}
             onKeyDown={onEnterPress}
           />
-          <button type="button" onClick={onSearchClick} className="search-btn">
-            <BiSearchAlt2 className="search-icon" />
+          <button
+            type="button"
+            onClick={onSearchClick}
+            testid="searchButton"
+            className="search-btn"
+          >
+            <BsSearch className="search-icon" />
           </button>
         </div>
       </div>
     )
   }
 
+  // Render Loading View
+  renderLoadingView = () => (
+    <div className="loader-container" testid="loader">
+      <Loader type="TailSpin" color="#0284C7" height={50} width={50} />
+    </div>
+  )
+
+  // On Failure View
+  renderFailureView = () => {
+    const failureImg =
+      'https://res.cloudinary.com/amjay/image/upload/v1687973957/Group_7522_n3zo28.png'
+    const failureAltText = 'failure view'
+
+    const onTryAgain = () => {
+      this.getBooksData()
+    }
+
+    return (
+      <div className="failure-view-container">
+        <img
+          className="failure-view-img"
+          src={failureImg}
+          alt={failureAltText}
+        />
+        <p className="failure-text">Something went wrong, Please try again.</p>
+        <button className="failure-btn" type="button" onClick={onTryAgain}>
+          Try Again
+        </button>
+      </div>
+    )
+  }
+
+  //   No Search Results
+  getNoSearchResults = () => {
+    const {searchInput} = this.state
+    const noResultsImg =
+      'https://res.cloudinary.com/amjay/image/upload/v1687973957/Asset_1_1_vgok8k.png'
+    const noResultsAltText = 'no books'
+
+    return (
+      <div className="no-search-results-container">
+        <img
+          className="no-results-img"
+          src={noResultsImg}
+          alt={noResultsAltText}
+        />
+        <h1 className="no-results-heading">
+          Your search for
+          {` ${searchInput} `}did not find any matches.
+        </h1>
+      </div>
+    )
+  }
+
+  //   On Successful Render View
+  renderSuccessView = () => {
+    const {booksData} = this.state
+
+    if (booksData.length === 0) {
+      return this.getNoSearchResults()
+    }
+
+    return this.getBooksList()
+  }
+
+  // Get Render Views
+  getRenderViews = () => {
+    const {apiStatus} = this.state
+
+    switch (apiStatus) {
+      case apiStatusConstraints.inProgress:
+        return this.renderLoadingView()
+
+      case apiStatusConstraints.success:
+        return this.renderSuccessView()
+
+      case apiStatusConstraints.failure:
+        return this.renderFailureView()
+
+      default:
+        return null
+    }
+  }
+
+  //   BookShelves Route Rendering
   render() {
     return (
       <div className="main-container">
@@ -209,7 +304,7 @@ class BookShelves extends Component {
               <div className="md-search-container">
                 {this.getSearchBarContainer()}
               </div>
-              {this.getBooksList()}
+              {this.getRenderViews()}
             </div>
           </div>
           <Footer />
